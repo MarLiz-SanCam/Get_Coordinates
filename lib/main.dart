@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:a_doc_location/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -14,9 +15,36 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      theme: ThemeData.light().copyWith(
+        extensions: const [
+          AppColors(
+              accentuated: Color(0xff257e2e),
+              overlay: Color(0xffe9bb49),
+              hint: Color(0xffeff6e0))
+        ],
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0)),
+            backgroundColor: const Color(0xff257e2e),
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+          ),
+        ),
       ),
+      darkTheme: ThemeData.dark().copyWith(
+        extensions: const [
+          AppColors(
+              accentuated: Color(0xff04391f),
+              overlay: Color(0xffb97f3c),
+              hint: Color.fromARGB(255, 180, 186, 190))
+        ],
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xff04391f),
+          ),
+        ),
+      ),
+      themeMode: ThemeMode.system,
       home: const MyHomePage(),
     );
   }
@@ -96,10 +124,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var colors = Theme.of(context).extension<AppColors>()!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Formulario'),
-      ),
+          backgroundColor: colors.accentuated,
+          centerTitle: true,
+          title: const Text(
+            'Get location',
+            style: TextStyle(color: Colors.white),
+          )),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -109,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
               TextField(
                 controller: _field1Controller,
                 decoration: const InputDecoration(
-                  labelText: 'Campo 1',
+                  labelText: 'Nombre del aula',
                 ),
               ),
               const SizedBox(height: 16),
