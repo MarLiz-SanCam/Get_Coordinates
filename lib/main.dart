@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
 
-import 'package:a_doc_location/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mysql1/mysql1.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,36 +15,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData.light().copyWith(
-        extensions: const [
-          AppColors(
-              accentuated: Color(0xff257e2e),
-              overlay: Color(0xffe9bb49),
-              hint: Color(0xffeff6e0))
-        ],
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0)),
-            backgroundColor: const Color(0xff257e2e),
-            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-          ),
-        ),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
-      darkTheme: ThemeData.dark().copyWith(
-        extensions: const [
-          AppColors(
-              accentuated: Color(0xff04391f),
-              overlay: Color(0xffb97f3c),
-              hint: Color.fromARGB(255, 180, 186, 190))
-        ],
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xff04391f),
-          ),
-        ),
-      ),
-      themeMode: ThemeMode.system,
       home: const MyHomePage(),
     );
   }
@@ -60,7 +33,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   // Controllers for the text fields
-  final TextEditingController _field1Controller = TextEditingController();
+  final TextEditingController _field1Controller =
+      TextEditingController(); // Aula
   final TextEditingController _field2Controller =
       TextEditingController(); // Latitud
   final TextEditingController _field3Controller =
@@ -79,7 +53,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // Verifica si los servicios de localización están habilitados
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Los servicios de localización no están habilitados
       return Future.error('Los servicios de ubicación están deshabilitados.');
     }
 
@@ -88,13 +61,10 @@ class _MyHomePageState extends State<MyHomePage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // El permiso fue denegado
         return Future.error('Los permisos de ubicación fueron denegados.');
       }
     }
-
     if (permission == LocationPermission.deniedForever) {
-      // Permisos denegados permanentemente, no se pueden solicitar
       return Future.error(
           'Los permisos de ubicación están denegados permanentemente.');
     }
@@ -111,28 +81,40 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _save() {
-    // Agrega tu lógica de guardado aquí
-    String field1Text = _field1Controller.text;
-    String field2Text = _field2Controller.text;
-    String field3Text = _field3Controller.text;
+  Future<void> _save() async {
+    // Conexión a la base de datos MySQL
+    final conn = await MySqlConnection.connect(ConnectionSettings(
+      host: '', // Cambiar
+      port: 3306,
+      user: '', // Cambia esto
+      password: '', //Cambiar
+      db: 'location_db',
+    ));
 
-    print('Campo 1: $field1Text');
-    print('Latitud: $field2Text');
-    print('Longitud: $field3Text');
+    // Inserta los datos en la base de datos
+    try {
+      await conn.query(
+        'INSERT INTO aulas (aula, latitud, longitud) VALUES (?, ?, ?)',
+        [
+          _field1Controller.text,
+          double.parse(_field2Controller.text),
+          double.parse(_field3Controller.text)
+        ],
+      );
+      print('Datos guardados exitosamente');
+    } catch (e) {
+      print('Error al guardar los datos: $e');
+    } finally {
+      await conn.close();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    var colors = Theme.of(context).extension<AppColors>()!;
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: colors.accentuated,
-          centerTitle: true,
-          title: const Text(
-            'Get location',
-            style: TextStyle(color: Colors.white),
-          )),
+        title: const Text('Formulario'),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -142,13 +124,13 @@ class _MyHomePageState extends State<MyHomePage> {
               TextField(
                 controller: _field1Controller,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre del aula',
+                  labelText: 'Aula',
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _field2Controller,
-                readOnly: true, // Para evitar que el usuario edite este campo
+                readOnly: true,
                 decoration: const InputDecoration(
                   labelText: 'Latitud',
                 ),
@@ -156,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(height: 16),
               TextField(
                 controller: _field3Controller,
-                readOnly: true, // Para evitar que el usuario edite este campo
+                readOnly: true,
                 decoration: const InputDecoration(
                   labelText: 'Longitud',
                 ),
